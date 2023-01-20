@@ -10,63 +10,75 @@
 namespace sol::lbind::detail {
     constexpr inline int RETURNS_STACK_MARGIN = 5;
 
-    template <class Ret>
-    struct ProcessReturns;
+    // template <auto F, TupleLike T>
+    // struct ProcessReturns<F, Values<T>> {
+    //     SOL_FORCE_INLINE
+    //     static int invoke(lua_State* state, auto&&... args) {
 
-    template <>
-    struct ProcessReturns<void> {
-        template <auto F, class... Args> SOL_FORCE_INLINE
-        static int finalInvoke(lua_State*, Args&&... args) {
-            std::invoke(F, std::forward<Args>(args)...);
+    //     }
+    // };
+
+    // template <auto F, ResultConvertible T>
+    // struct ProcessReturns<F, T> {
+    //     SOL_FORCE_INLINE
+    //     static int invoke(lua_State* state, auto&&... args) {
+    //         auto&& ret = std::invoke(F, std::forward<decltype(args)>(args)...);
+    //         luaL_checkstack(state, 1 + RETURNS_STACK_MARGIN, nullptr);
+    //         ConvertResult<T>::convert(state, std::forward<decltype(ret)>(ret));
+    //         return 1;
+    //     }
+    // };
+
+    template <auto F, class Ret, int I, class... Args>
+    struct WrapperFunctionImpl;
+
+    template <auto F, class Ret, int I, class Arg, class... MoreArgs>
+    struct WrapperFunctionImpl<F, Ret, I, Arg, MoreArgs...> {
+        SOL_FORCE_INLINE
+        static int invoke(lua_State* state, auto&&... passed) {
+            return WrapperFunctionImpl<F, Ret, I + 1, MoreArgs...>::invoke(
+                state,
+                std::forward<decltype(passed)>(passed)...,
+                ConvertArgument<Arg>::convert(state, I)
+            );
+        }
+    };
+
+    template <auto F, int I>
+    struct WrapperFunctionImpl<F, void, I> {
+        SOL_FORCE_INLINE
+        static int invoke(lua_State* state, auto&&... passed) {
+            std::invoke(F, std::forward<decltype(passed)>(passed)...);
             return 0;
         }
     };
 
-    template <TupleLike T>
-    struct ProcessReturns<Values<T>> {
-        template <auto F, class... Args> SOL_FORCE_INLINE
-        static int finalInvoke(lua_State* state, Args&&... args) {
+    template <auto F, int I, TupleLike T>
+    struct WrapperFunctionImpl<F, Values<T>, I> {
+        SOL_FORCE_INLINE
+        static int invoke(lua_State* state, auto&&... passed) {
             std::apply(
                 [&](auto&&... values) {
                     luaL_checkstack(state, sizeof...(values) + RETURNS_STACK_MARGIN, nullptr);
                     (..., ConvertResult<decltype(values)>::convert(state, std::forward<decltype(values)>(values)));
                 },
-                *std::invoke(F, std::forward<Args>(args)...)
+                *std::invoke(F, std::forward<decltype(passed)>(passed)...)
             );
 
             return std::tuple_size_v<T>;
         }
     };
 
-    template <ResultConvertible T>
-    struct ProcessReturns<T> {
-        template <auto F, class... Args> SOL_FORCE_INLINE
-        static int finalInvoke(lua_State* state, Args&&... args) {
-            auto&& ret = std::invoke(F, std::forward<Args>(args)...);
+    template <auto F, int I, ResultConvertible Ret>
+    struct WrapperFunctionImpl<F, Ret, I> {
+        SOL_FORCE_INLINE
+        static int invoke(lua_State* state, auto&&... args) {
+            auto&& ret = std::invoke(F, std::forward<decltype(args)>(args)...);
             luaL_checkstack(state, 1 + RETURNS_STACK_MARGIN, nullptr);
-            ConvertResult<T>::convert(state, std::forward<decltype(ret)>(ret));
+            ConvertResult<Ret>::convert(state, std::forward<decltype(ret)>(ret));
             return 1;
         }
     };
-
-    template <int I, auto F, class R, class... Passed, class ToPass, class... MoreToPass> SOL_FORCE_INLINE
-    static int passArgs(lua_State* state, Passed&&... passed) {
-        return ::sol::lbind::detail::passArgs<I + 1, F, R, MoreToPass...>(
-            state,
-            std::forward<Passed>(passed)...,
-            ConvertArgument<ToPass>::convert(state, I)
-        );
-    }
-
-    template <int, auto F, class R, class... Passed> SOL_FORCE_INLINE
-    static int passArgs(lua_State* state, Passed&&... passed) {
-        return ProcessReturns<R>::template finalInvoke<F>(state, std::forward<Passed>(passed)...);
-    }
-
-    template <auto F, class R, class... Args> SOL_FORCE_INLINE
-    static int doInvoke(lua_State* state) {
-        return ::sol::lbind::detail::passArgs<1, F, R, Args...>(state);
-    }
 
     template <auto F>
     struct WrapperFunction;
@@ -75,7 +87,7 @@ namespace sol::lbind::detail {
     struct WrapperFunction<F> {
         SOL_FORCE_INLINE
         static int invoke(lua_State* state) {
-            return ::sol::lbind::detail::doInvoke<F, Ret, Args...>(state);
+            return WrapperFunctionImpl<F, Ret, 1, Args...>::invoke(state);
         }
     };
 
@@ -84,7 +96,7 @@ namespace sol::lbind::detail {
     struct WrapperFunction<F> {
         SOL_FORCE_INLINE
         static int invoke(lua_State* state) {
-            return ::sol::lbind::detail::doInvoke<F, Ret, T&, Args...>(state);
+            return WrapperFunctionImpl<F, Ret, 1, T&, Args...>::invoke(state);
         }
     };
 
@@ -93,7 +105,7 @@ namespace sol::lbind::detail {
     struct WrapperFunction<F> {
         SOL_FORCE_INLINE
         static int invoke(lua_State* state) {
-            return ::sol::lbind::detail::doInvoke<F, Ret, T const&, Args...>(state);
+            return WrapperFunctionImpl<F, Ret, 1, T const&, Args...>::invoke(state);
         }
     };
 
@@ -104,7 +116,7 @@ namespace sol::lbind::detail {
     struct FunctionObjectWrapperFunction<F, M> {
         SOL_FORCE_INLINE
         static int invoke(lua_State* state) {
-            return ::sol::lbind::detail::doInvoke<F, Ret, Args...>(state);
+            return WrapperFunctionImpl<F, Ret, 1, Args...>::invoke(state);
         }
     };
 

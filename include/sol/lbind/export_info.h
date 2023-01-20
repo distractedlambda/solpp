@@ -5,10 +5,18 @@
 #include <concepts>
 
 namespace sol::lbind {
+    template <class Self>
+    concept DefinesLuaName = requires {
+        { Self::luaName() } -> std::convertible_to<char const*>;
+    };
+
     template <class T>
-    struct ExportInfo {
+    struct ExportInfo;
+
+    template <DefinesLuaName T>
+    struct ExportInfo<T> {
         SOL_FORCE_INLINE
-        static char const* name() {
+        static decltype(auto) name() {
             return T::luaName();
         }
     };

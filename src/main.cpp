@@ -5,7 +5,7 @@
 #include <iostream>
 
 int main() {
-    auto f = sol::lbind::wrappedFunction<powf>;
+    // auto f = sol::lbind::wrappedFunction<std::bind(std::powf, 2.0)>;
     std::cout << "Hello, World!" << std::endl;
     return 0;
 }

@@ -46,6 +46,10 @@ target_sources(sol PRIVATE
     include/sol/lbind/export_info.h
     include/sol/lbind/semantic_wrapper.h
     include/sol/lbind/wrapper_function.h
+    include/sol/meta/constant.h
+    include/sol/meta/constant_pack.h
+    include/sol/meta/type.h
+    include/sol/meta/type_pack.h
     include/sol/panic.h
 
     src/main.cpp
