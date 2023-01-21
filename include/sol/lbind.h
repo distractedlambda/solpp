@@ -1,8 +1,7 @@
 #pragma once
 
-#include <sol/lbind/wrapper_function.h>
+#include <sol/lbind/register.h>
 
 namespace sol::lbind {
-    template <auto F>
-    constexpr inline lua_CFunction wrappedFunction = &detail::WrapperFunction<F>::invoke;
+
 }

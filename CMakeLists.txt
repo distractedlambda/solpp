@@ -43,7 +43,8 @@ target_sources(sol PRIVATE
     include/sol/lbind.h
     include/sol/lbind/convert_argument.h
     include/sol/lbind/convert_result.h
-    include/sol/lbind/export_info.h
+    include/sol/lbind/exports.h
+    include/sol/lbind/register.h
     include/sol/lbind/semantic_wrapper.h
     include/sol/lbind/wrapper_function.h
     include/sol/meta/constant.h

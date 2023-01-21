@@ -103,4 +103,7 @@ namespace sol::lbind::detail {
 
     template <HasUnambiguousConstCallOperator auto F>
     struct WrapperFunction<F>: FunctionObjectWrapperFunction<F, &decltype(F)::operator()> {};
+
+    template <auto F>
+    constexpr inline lua_CFunction wrappedFunction = &detail::WrapperFunction<F>::invoke;
 }

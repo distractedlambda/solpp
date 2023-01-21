@@ -1,7 +1,7 @@
 #pragma once
 
 #include <sol/concepts/unwrappable.h>
-#include <sol/lbind/export_info.h>
+#include <sol/lbind/exports.h>
 
 #include "lauxlib.h"
 
@@ -107,7 +107,7 @@ namespace sol::lbind {
             if (lua_isnoneornil(state, arg)) {
                 return nullptr;
             } else {
-                return reinterpret_cast<T*>(luaL_checkudata(state, arg, ExportInfo<T>::name()));
+                return reinterpret_cast<T*>(luaL_checkudata(state, arg, Exports<T>::name));
             }
         }
 
@@ -115,7 +115,7 @@ namespace sol::lbind {
         static std::optional<T*> tryConvert(lua_State* state, int arg) {
             if (lua_isnoneornil(state, arg)) {
                 return nullptr;
-            } else if (auto* mem = luaL_testudata(state, arg, ExportInfo<T>::name())) {
+            } else if (auto* mem = luaL_testudata(state, arg, Exports<T>::name)) {
                 return reinterpret_cast<T*>(mem);
             } else {
                 return std::nullopt;
@@ -127,12 +127,12 @@ namespace sol::lbind {
     struct ConvertArgument<T&> {
         SOL_FORCE_INLINE
         static T& convert(lua_State* state, int arg) {
-            return *reinterpret_cast<T*>(luaL_checkudata(state, arg, ExportInfo<T>::name()));
+            return *reinterpret_cast<T*>(luaL_checkudata(state, arg, Exports<T>::name));
         }
 
         SOL_FORCE_INLINE
         static T* tryConvert(lua_State* state, int arg) {
-            return reinterpret_cast<T*>(luaL_testudata(state, arg, ExportInfo<T>::name()));
+            return reinterpret_cast<T*>(luaL_testudata(state, arg, Exports<T>::name));
         }
     };
 
