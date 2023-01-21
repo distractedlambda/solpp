@@ -1,6 +1,6 @@
 #pragma once
 
-#include <sol/concepts/has_unambiguous_call_operator.h>
+#include <sol/concepts/has_unambiguous_const_call_operator.h>
 #include <sol/concepts/tuple_like.h>
 #include <sol/force_inline.h>
 #include <sol/lbind/convert_argument.h>
@@ -9,25 +9,6 @@
 
 namespace sol::lbind::detail {
     constexpr inline int RETURNS_STACK_MARGIN = 5;
-
-    // template <auto F, TupleLike T>
-    // struct ProcessReturns<F, Values<T>> {
-    //     SOL_FORCE_INLINE
-    //     static int invoke(lua_State* state, auto&&... args) {
-
-    //     }
-    // };
-
-    // template <auto F, ResultConvertible T>
-    // struct ProcessReturns<F, T> {
-    //     SOL_FORCE_INLINE
-    //     static int invoke(lua_State* state, auto&&... args) {
-    //         auto&& ret = std::invoke(F, std::forward<decltype(args)>(args)...);
-    //         luaL_checkstack(state, 1 + RETURNS_STACK_MARGIN, nullptr);
-    //         ConvertResult<T>::convert(state, std::forward<decltype(ret)>(ret));
-    //         return 1;
-    //     }
-    // };
 
     template <auto F, class Ret, int I, class... Args>
     struct WrapperFunctionImpl;
@@ -120,6 +101,6 @@ namespace sol::lbind::detail {
         }
     };
 
-    template <HasUnambiguousCallOperator auto F>
+    template <HasUnambiguousConstCallOperator auto F>
     struct WrapperFunction<F>: FunctionObjectWrapperFunction<F, &decltype(F)::operator()> {};
 }

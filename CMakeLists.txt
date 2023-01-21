@@ -34,7 +34,7 @@ target_include_directories(sol PRIVATE include)
 target_sources(sol PRIVATE
     include/sol/concepts/function.h
     include/sol/concepts/function_pointer.h
-    include/sol/concepts/has_unambiguous_call_operator.h
+    include/sol/concepts/has_unambiguous_const_call_operator.h
     include/sol/concepts/pointer.h
     include/sol/concepts/tuple_like.h
     include/sol/concepts/unwrappable.h
