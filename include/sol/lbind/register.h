@@ -2,8 +2,19 @@
 
 #include <sol/lbind/exports.h>
 #include <sol/lbind/wrapper_function.h>
+#include <sol/panic.h>
 
 #include "lauxlib.h"
+
+namespace sol::lbind::detail {
+    inline void dispatchIndex(lua_State* state) {
+        if (!lua_getmetatable(state, 1)) {
+            ::sol::panic();
+        }
+
+        lua_rawget(state, 3);
+    }
+}
 
 namespace sol::lbind {
     template <Exported T>

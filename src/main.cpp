@@ -1,5 +1,3 @@
-#include <sol/lbind.h>
-
 #include <iostream>
 
 int main() {

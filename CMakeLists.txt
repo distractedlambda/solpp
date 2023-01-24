@@ -39,6 +39,7 @@ target_sources(sol PRIVATE
     include/sol/concepts/tuple_like.h
     include/sol/concepts/unwrappable.h
     include/sol/force_inline.h
+    include/sol/fxhash.h
     include/sol/guard.h
     include/sol/lbind.h
     include/sol/lbind/convert_argument.h
