@@ -53,6 +53,10 @@ target_sources(sol PRIVATE
     include/sol/meta/type.h
     include/sol/meta/type_pack.h
     include/sol/panic.h
+    include/sol/rtree.h
+    include/sol/simd.h
+    include/sol/ufunc.h
+    include/sol/vec.h
 
     src/main.cpp
 )
