@@ -6,16 +6,21 @@ project(sol)
 
 set(CMAKE_CXX_STANDARD 20)
 
+find_package(Eigen3 REQUIRED NO_MODULE)
+find_package(glfw3 REQUIRED)
+
 FetchContent_Declare(lua
     URL "http://www.lua.org/ftp/lua-5.4.4.tar.gz"
-    URL_HASH SHA256=164c7849653b80ae67bec4b7473b884bf5cc8d2dca05653475ec2ed27b9ebf61)
+    URL_HASH SHA256=164c7849653b80ae67bec4b7473b884bf5cc8d2dca05653475ec2ed27b9ebf61
+)
 
 FetchContent_MakeAvailable(lua)
 
 set(lua_source_files
     lapi.c lauxlib.c lbaselib.c lcode.c lcorolib.c lctype.c ldblib.c ldebug.c ldo.c ldump.c lfunc.c lgc.c linit.c
     liolib.c llex.c lmathlib.c lmem.c loadlib.c lobject.c lopcodes.c loslib.c lparser.c lstate.c lstring.c lstrlib.c
-    ltable.c ltablib.c ltm.c lua.c lundump.c lutf8lib.c lvm.c lzio.c)
+    ltable.c ltablib.c ltm.c lua.c lundump.c lutf8lib.c lvm.c lzio.c
+)
 
 list(TRANSFORM lua_source_files PREPEND "${lua_SOURCE_DIR}/src/")
 
@@ -40,6 +45,7 @@ target_sources(sol PRIVATE
     include/sol/concepts/unwrappable.h
     include/sol/force_inline.h
     include/sol/fxhash.h
+    include/sol/glfw/error.h
     include/sol/guard.h
     include/sol/lbind.h
     include/sol/lbind/convert_argument.h
@@ -52,15 +58,26 @@ target_sources(sol PRIVATE
     include/sol/meta/constant_pack.h
     include/sol/meta/type.h
     include/sol/meta/type_pack.h
+    include/sol/overload.h
     include/sol/panic.h
     include/sol/rtree.h
     include/sol/simd.h
     include/sol/ufunc.h
     include/sol/vec.h
+    include/sol/window.h
 
+    src/glfw/error.cpp
     src/main.cpp
+    src/panic.cpp
+    src/window.cpp
+)
+
+target_compile_definitions(sol PRIVATE
+    GLFW_INCLUDE_NONE
 )
 
 target_link_libraries(sol PRIVATE
+    Eigen3::Eigen
+    glfw
     lua::lua
 )
