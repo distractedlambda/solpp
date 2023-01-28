@@ -6,7 +6,10 @@ project(sol)
 
 set(CMAKE_CXX_STANDARD 20)
 
+find_package(assimp REQUIRED)
+find_package(CLI11 REQUIRED)
 find_package(Eigen3 REQUIRED NO_MODULE)
+find_package(fmt REQUIRED)
 find_package(glfw3 REQUIRED)
 
 FetchContent_Declare(lua
@@ -37,6 +40,7 @@ add_executable(sol)
 target_include_directories(sol PRIVATE include)
 
 target_sources(sol PRIVATE
+    include/sol/async.h
     include/sol/concepts/function.h
     include/sol/concepts/function_pointer.h
     include/sol/concepts/has_unambiguous_const_call_operator.h
@@ -54,16 +58,9 @@ target_sources(sol PRIVATE
     include/sol/lbind/register.h
     include/sol/lbind/semantic_wrapper.h
     include/sol/lbind/wrapper_function.h
-    include/sol/meta/constant.h
-    include/sol/meta/constant_pack.h
-    include/sol/meta/type.h
-    include/sol/meta/type_pack.h
+    include/sol/oneshot_function.h
     include/sol/overload.h
     include/sol/panic.h
-    include/sol/rtree.h
-    include/sol/simd.h
-    include/sol/ufunc.h
-    include/sol/vec.h
     include/sol/window.h
 
     src/glfw/error.cpp
@@ -77,7 +74,10 @@ target_compile_definitions(sol PRIVATE
 )
 
 target_link_libraries(sol PRIVATE
+    assimp::assimp
+    CLI11::CLI11
     Eigen3::Eigen
+    fmt::fmt
     glfw
     lua::lua
 )

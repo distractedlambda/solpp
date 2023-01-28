@@ -1,9 +1,18 @@
-#include <sol/window.h>
+#include <sol/guard.h>
 
-#include <iostream>
+#include <CLI/App.hpp>
+#include <CLI/Config.hpp>
+#include <CLI/Formatter.hpp>
 
-int main() {
-    sol::Window window(640, 480, "Hi", {{sol::Window::Resizable{false}, sol::Window::Visible{true}}});
-    std::cout << "Hello, World!" << std::endl;
+#include "lauxlib.h"
+
+int main(int argc, char** argv) {
+    CLI::App app("Sol");
+
+    CLI11_PARSE(app, argc, argv);
+
+    auto luaState = luaL_newstate();
+    sol::Guard destroyLuaState = [&]{ lua_close(luaState); };
+
     return 0;
 }

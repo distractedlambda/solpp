@@ -31,7 +31,7 @@ void sol::Window::Handler::key(int key, int scancode, int action, int modifiers)
 
 void sol::Window::Handler::character(uint32_t codepoint) {}
 
-void sol::Window::Handler::drop(std::span<const char* const> paths) {}
+void sol::Window::Handler::drop(std::span<char const* const> paths) {}
 
 sol::Window::Handler::~Handler() = default;
 
