@@ -8,39 +8,40 @@
 #include <sol/lbind/semantic_wrapper.h>
 
 namespace sol::lbind::detail {
-    constexpr inline int RETURNS_STACK_MARGIN = 5;
+    constexpr inline int STACK_MARGIN = 5;
 
-    template <auto F, class Ret, int I, class... Args>
+    template <auto F, class Ret, class... Args>
     struct WrapperFunctionImpl;
 
-    template <auto F, class Ret, int I, class Arg, class... MoreArgs>
-    struct WrapperFunctionImpl<F, Ret, I, Arg, MoreArgs...> {
+    template <auto F, class Ret, class Arg, class... MoreArgs>
+    struct WrapperFunctionImpl<F, Ret, Arg, MoreArgs...> {
         SOL_FORCE_INLINE
-        static int invoke(lua_State* state, auto&&... passed) {
-            return WrapperFunctionImpl<F, Ret, I + 1, MoreArgs...>::invoke(
+        static int invoke(lua_State* state, int& nextArg, auto&&... passed) {
+            return WrapperFunctionImpl<F, Ret, MoreArgs...>::invoke(
                 state,
+                nextArg,
                 std::forward<decltype(passed)>(passed)...,
-                ConvertArgument<Arg>::convert(state, I)
+                ConvertArgument<Arg>::convert(state, nextArg)
             );
         }
     };
 
-    template <auto F, int I>
-    struct WrapperFunctionImpl<F, void, I> {
+    template <auto F>
+    struct WrapperFunctionImpl<F, void> {
         SOL_FORCE_INLINE
-        static int invoke(lua_State* state, auto&&... passed) {
+        static int invoke(lua_State* state, int& nextArg, auto&&... passed) {
             std::invoke(F, std::forward<decltype(passed)>(passed)...);
             return 0;
         }
     };
 
-    template <auto F, int I, TupleLike T>
-    struct WrapperFunctionImpl<F, Values<T>, I> {
+    template <auto F, TupleLike T>
+    struct WrapperFunctionImpl<F, Values<T>> {
         SOL_FORCE_INLINE
-        static int invoke(lua_State* state, auto&&... passed) {
+        static int invoke(lua_State* state, int& nextArg, auto&&... passed) {
             std::apply(
                 [&](auto&&... values) {
-                    luaL_checkstack(state, sizeof...(values) + RETURNS_STACK_MARGIN, nullptr);
+                    luaL_checkstack(state, sizeof...(values) + STACK_MARGIN, nullptr);
                     (..., ConvertResult<decltype(values)>::convert(state, std::forward<decltype(values)>(values)));
                 },
                 *std::invoke(F, std::forward<decltype(passed)>(passed)...)
@@ -50,12 +51,12 @@ namespace sol::lbind::detail {
         }
     };
 
-    template <auto F, int I, ResultConvertible Ret>
-    struct WrapperFunctionImpl<F, Ret, I> {
+    template <auto F, ResultConvertible Ret>
+    struct WrapperFunctionImpl<F, Ret> {
         SOL_FORCE_INLINE
-        static int invoke(lua_State* state, auto&&... args) {
+        static int invoke(lua_State* state, int& nextArg, auto&&... args) {
             auto&& ret = std::invoke(F, std::forward<decltype(args)>(args)...);
-            luaL_checkstack(state, 1 + RETURNS_STACK_MARGIN, nullptr);
+            luaL_checkstack(state, 1 + STACK_MARGIN, nullptr);
             ConvertResult<Ret>::convert(state, std::forward<decltype(ret)>(ret));
             return 1;
         }
@@ -68,7 +69,8 @@ namespace sol::lbind::detail {
     struct WrapperFunction<F> {
         SOL_FORCE_INLINE
         static int invoke(lua_State* state) {
-            return WrapperFunctionImpl<F, Ret, 1, Args...>::invoke(state);
+            int nextArg = 1;
+            return WrapperFunctionImpl<F, Ret, Args...>::invoke(state, nextArg);
         }
     };
 
@@ -77,7 +79,8 @@ namespace sol::lbind::detail {
     struct WrapperFunction<F> {
         SOL_FORCE_INLINE
         static int invoke(lua_State* state) {
-            return WrapperFunctionImpl<F, Ret, 1, T&, Args...>::invoke(state);
+            int nextArg = 1;
+            return WrapperFunctionImpl<F, Ret, T&, Args...>::invoke(state, nextArg);
         }
     };
 
@@ -86,7 +89,8 @@ namespace sol::lbind::detail {
     struct WrapperFunction<F> {
         SOL_FORCE_INLINE
         static int invoke(lua_State* state) {
-            return WrapperFunctionImpl<F, Ret, 1, T const&, Args...>::invoke(state);
+            int nextArg = 1;
+            return WrapperFunctionImpl<F, Ret, T const&, Args...>::invoke(state, nextArg);
         }
     };
 
@@ -97,7 +101,8 @@ namespace sol::lbind::detail {
     struct FunctionObjectWrapperFunction<F, M> {
         SOL_FORCE_INLINE
         static int invoke(lua_State* state) {
-            return WrapperFunctionImpl<F, Ret, 1, Args...>::invoke(state);
+            int nextArg = 1;
+            return WrapperFunctionImpl<F, Ret, Args...>::invoke(state, nextArg);
         }
     };
 
@@ -105,5 +110,5 @@ namespace sol::lbind::detail {
     struct WrapperFunction<F>: FunctionObjectWrapperFunction<F, &decltype(F)::operator()> {};
 
     template <auto F>
-    constexpr inline lua_CFunction wrappedFunction = &detail::WrapperFunction<F>::invoke;
+    constexpr inline lua_CFunction wrappedFunction = &WrapperFunction<F>::invoke;
 }

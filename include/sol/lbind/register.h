@@ -1,25 +1,25 @@
 #pragma once
 
-#include <sol/lbind/exports.h>
+#include <sol/lbind/lua_name.h>
 #include <sol/lbind/wrapper_function.h>
 #include <sol/panic.h>
 
-#include "lauxlib.h"
-
 namespace sol::lbind::detail {
-    inline void dispatchIndex(lua_State* state) {
-        if (!lua_getmetatable(state, 1)) {
-            ::sol::panic();
-        }
+    void registerTypeMetatable(lua_State* state, char const* type);
 
-        lua_rawget(state, 3);
-    }
+    void registerMetamethod(lua_State* state, char const* type, char const* name, lua_CFunction body);
+
+    void registerGetter(lua_State* state, char const* type, char const* name, lua_CFunction body);
+
+    void registerSetter(lua_State* state, char const* type, char const* name, lua_CFunction body);
+
+    void registerMethod(lua_State* state, char const* type, char const* name, lua_CFunction body);
 }
 
 namespace sol::lbind {
     template <Exported T>
     void registerType(lua_State* state) {
-        luaL_newmetatable(state, Exports<T>::name);
+        luaL_newmetatable(state, LuaName<T>::value);
 
         if constexpr (std::is_destructible_v<T> && !std::is_trivially_destructible_v<T>) {
             lua_pushstring(state, "__gc");

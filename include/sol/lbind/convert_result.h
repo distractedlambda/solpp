@@ -1,6 +1,6 @@
 #pragma once
 
-#include <sol/lbind/exports.h>
+#include <sol/lbind/lua_name.h>
 
 #include "lauxlib.h"
 
@@ -74,7 +74,7 @@ namespace sol::lbind {
         template <class Value> SOL_FORCE_INLINE
         static void convert(lua_State* state, Value&& value) {
             new (lua_newuserdatauv(state, sizeof(T), 0)) T(std::forward<Value>(value));
-            luaL_setmetatable(state, Exports<T>::name);
+            luaL_setmetatable(state, LuaName<T>::value);
         }
     };
 

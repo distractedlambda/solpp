@@ -54,16 +54,20 @@ target_sources(sol PRIVATE
     include/sol/lbind.h
     include/sol/lbind/convert_argument.h
     include/sol/lbind/convert_result.h
-    include/sol/lbind/exports.h
+    include/sol/lbind/lua_name.h
     include/sol/lbind/register.h
     include/sol/lbind/semantic_wrapper.h
     include/sol/lbind/wrapper_function.h
+    include/sol/log.h
     include/sol/oneshot_function.h
     include/sol/overload.h
     include/sol/panic.h
+    include/sol/unreachable.h
     include/sol/window.h
 
     src/glfw/error.cpp
+    src/lbind/register.cpp
+    src/log.cpp
     src/main.cpp
     src/panic.cpp
     src/window.cpp

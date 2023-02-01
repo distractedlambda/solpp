@@ -12,24 +12,19 @@ namespace sol::lbind::detail {
     concept DefinesLuaName = requires {
         { Self::luaName } -> std::convertible_to<char const*>;
     };
-
-    template <class Self>
-    concept DefinesLuaMethods = requires {
-        Self::luaMethods;
-    };
 }
 
 namespace sol::lbind {
     template <class T>
-    struct Exports;
+    struct LuaName;
 
     template <detail::DefinesLuaName T>
-    struct Exports<T> {
-        constexpr static inline decltype(auto) name = T::luaName;
+    struct LuaName<T> {
+        constexpr static inline decltype(auto) value = T::luaName;
     };
 
     template <class Self>
     concept Exported = alignof(Self) <= alignof(size_t) && requires {
-        { Exports<Self>::name } -> std::convertible_to<char const*>;
+        { LuaName<Self>::value } -> std::convertible_to<char const*>;
     };
 }
